@@ -14,7 +14,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/
@@ -127,3 +126,20 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Others
+*.pl
+*/data/
+data/
+experiments/
+output/
+*.log
+.DS_Store
+simulation/
+*.txt
+.vscode/
+*.err
+*.out
+error_files/
+orf-find-output/
+benchmark/
