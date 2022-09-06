@@ -165,24 +165,28 @@ def run_analysis(args):
 
         # Longest sequences
         consemble_longest = os.path.join(analysis.output, "{}/consemble{}+_longest.fasta".format(i, i))
-        utillib.write_id_and_sequence(data=nucleotidelongest, file=consemble_longest, final=True, overlap=i, plusonly=False)
+        utillib.write_id_and_sequence(data=nucleotidelongest, file=consemble_longest, final=True, overlap=i, plusonly=False,
+                                        overlapmax=overlaps)
 
         # Shortest sequences
         consemble_shortest = os.path.join(analysis.output, "{}/consemble{}+_shortest.fasta".format(i, i))
-        utillib.write_id_and_sequence(data=nucleotideshortest, file=consemble_shortest, final=True, overlap=i, plusonly=False)
+        utillib.write_id_and_sequence(data=nucleotideshortest, file=consemble_shortest, final=True, overlap=i, plusonly=False,
+                                        overlapmax=overlaps)
 
         # Amino sequences 
         consemble_fa = os.path.join(analysis.output, "{}/consemble{}+.faa".format(i, i))
-        utillib.write_id_and_sequence(data=aminocontigs, file=consemble_fa, final=True, overlap=i, plusonly=False)
+        utillib.write_id_and_sequence(data=aminocontigs, file=consemble_fa, final=True, overlap=i, plusonly=False, 
+                                        overlapmax=overlaps)
 
         # Benchmark results
         if args.benchmark:
             consemble_fa_hits = os.path.join(analysis.output, "{}/consemble{}+_hits.txt".format(i, i))
-            utillib.write_benchmark_ref(data=asemblyhits, file=consemble_fa_hits, overlap=i, plusonly=False)
+            utillib.write_benchmark_ref(data=asemblyhits, file=consemble_fa_hits, overlap=i, plusonly=False, overlapmax=overlaps)
 
         # Reference
         consemble_ref = os.path.join(analysis.output, "{}/consemble{}+_ref.txt".format(i, i))
-        utillib.write_ref(data=contigsref, names=analysis.contigsassemblers, file=consemble_ref, overlap=i, plusonly=False)
+        utillib.write_ref(data=contigsref, names=analysis.contigsassemblers, file=consemble_ref, overlap=i, plusonly=False, 
+                            overlapmax=overlaps)
     
     toc = time.perf_counter()
     print(f"Ran get consensus contigs in {toc - tic:0.4f} seconds")
@@ -266,6 +270,8 @@ analysis.add_argument("-a", "--assemblies", nargs='+', help="specifies a list of
 analysis.add_argument("-n", "--name", default="result", help="specifies the analysis name (e.g testAnalysis) to organize output files")
 analysis.add_argument("-w", "--write", action="store_true", help="write intermediate output to files")
 analysis.add_argument("-b", "--benchmark", help="bechmark transcriptome")
+analysis.add_argument("-p", "--aminoacids", action="store_true", help="specifies whether the files are amino acid sequences files \
+        (default is nucleotide sequences fies)")
 
 ## Add process reads command
 process_reads = subparsers.add_parser("process_reads", aliases=['pr', 'p'], help="tool to filter and normalize reads prior to \

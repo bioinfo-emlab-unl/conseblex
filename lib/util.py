@@ -13,7 +13,8 @@ class Util():
         self.openfiles = []
 
     @staticmethod
-    def write_id_and_sequence(data: dict, file: str, final: bool=False, overlap: int=0, plusonly: bool=True ) -> None:
+    def write_id_and_sequence(data: dict, file: str, final: bool=False, overlap: int=0, plusonly: bool=True, 
+                                overlapmax: int=5) -> None:
         """Write sequence Id and sequence to file
 
         Arguments:
@@ -38,19 +39,20 @@ class Util():
                         outfile.write(">{}\n".format(seqid))
                         outfile.write("{}\n".format(sequence["seq"]))
         
-        # write to overlap+ file               
-        with open(file, 'w') as outfile:
-            for seqid, sequence in data.items():
-                if final:
-                    if sequence["overlap"] >= overlap:
+        # write to overlap+ file  
+        if overlap < overlapmax:             
+            with open(file, 'w') as outfile:
+                for seqid, sequence in data.items():
+                    if final:
+                        if sequence["overlap"] >= overlap:
+                            outfile.write(">{}\n".format(seqid))
+                            outfile.write("{}\n".format(sequence["seq"]))
+                    else:
                         outfile.write(">{}\n".format(seqid))
-                        outfile.write("{}\n".format(sequence["seq"]))
-                else:
-                    outfile.write(">{}\n".format(seqid))
-                    outfile.write("{}\n".format(sequence)) 
+                        outfile.write("{}\n".format(sequence)) 
 
     @staticmethod
-    def write_ref(data: dict, names: dict, file: str, overlap: int, plusonly: bool=True) -> None:
+    def write_ref(data: dict, names: dict, file: str, overlap: int, plusonly: bool=True, overlapmax: int=5) -> None:
         """Write reference for contig Id against coresponding Ids and assembler names
 
         Arguments:
@@ -76,16 +78,17 @@ class Util():
                         outfile.write("\t\t{}\t".format(names[key]["id"]))
                         outfile.write("\t\t{}\n".format(value["id"]))
 
-        # Write to overlap+ file                
-        with open(file, 'w') as outfile:
-            for key, value in data.items():
-                if value["overlap"] >= overlap:
-                    outfile.write("{}\t".format(key))
-                    outfile.write("\t\t{}\t".format(names[key]["id"]))
-                    outfile.write("\t\t{}\n".format(value["id"]))
+        # Write to overlap+ file
+        if overlap < overlapmax:                
+            with open(file, 'w') as outfile:
+                for key, value in data.items():
+                    if value["overlap"] >= overlap:
+                        outfile.write("{}\t".format(key))
+                        outfile.write("\t\t{}\t".format(names[key]["id"]))
+                        outfile.write("\t\t{}\n".format(value["id"]))
 
     @staticmethod
-    def write_benchmark_ref(data: dict, file: str, overlap: int=0, plusonly: bool=True) -> None:
+    def write_benchmark_ref(data: dict, file: str, overlap: int=0, plusonly: bool=True, overlapmax: int=5) -> None:
         """Write benchmark reference to file
 
         Arguments:
@@ -112,12 +115,13 @@ class Util():
                         outfile.write("{}\t".format(id))
                         outfile.write("\t\t{}\n".format(value["id"]))
 
-        # write to overlap+ file                
-        with open(file, 'w') as outfile:
-            for id, value in data.items():
-                if value["overlap"] >= overlap:
-                    outfile.write("{}\t".format(id))
-                    outfile.write("\t\t{}\n".format(value["id"]))
+        # write to overlap+ file
+        if overlap < overlapmax:                
+            with open(file, 'w') as outfile:
+                for id, value in data.items():
+                    if value["overlap"] >= overlap:
+                        outfile.write("{}\t".format(id))
+                        outfile.write("\t\t{}\n".format(value["id"]))
 
     @staticmethod
     def directory_exits(directorypath: str) -> bool:

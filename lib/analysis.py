@@ -22,6 +22,7 @@ class Analysis():
         """
         self.analysisname = args.name
         self.write = args.write
+        self.aminoacids = args.aminoacids
         self.basedir = kwargs['basedir']
         self.output = os.path.join(self.basedir, 'analysis/{}'.format(self.analysisname))
         self.logfile = os.path.join(self.basedir, 'analysis/analysis.log')
@@ -31,7 +32,12 @@ class Analysis():
         self.benchmark = args.benchmark
         self.orfs = {}
         self.mergedtranscripts = {}
-        self.mergedtranscripts_file = os.path.join(self.output,"mergedTranscripts.fa")
+
+        if self.aminoacids:
+            self.mergedtranscripts_file = os.path.join(self.output,"mergedTranscripts.faa")
+        else:
+            self.mergedtranscripts_file = os.path.join(self.output,"mergedTranscripts.fa")
+
         self.transcriptsassemblers = {}
         self.longestorfs = {}
         self.longestmergedORFs_file = os.path.join(self.output, "longestMergedORFs.faa")
@@ -75,24 +81,38 @@ class Analysis():
             command {str} -- ORF command, with arguments, to run
             outfile {str} -- output file in ORF command
         """
-        commandargs = shlex.split(command)
-        if not os.path.isfile(outfile):
-            try:
-                # proc = subprocess.Popen(commandargs)
-                # proc.wait()
-                proc = True
 
-                if proc:
-                    # Use index file instead of creating dictionary
-                    self.orfs = SeqIO.index(outfile, "fasta")
-            except subprocess.CalledProcessError as err:
-                pass
-        else:
+        # Store CalledProcessError
+        proerror = ""
+        if not self.aminoacids:
+            commandargs = shlex.split(command)
+            if not os.path.isfile(outfile):
+                retry = 0
+
+                # Run ORF find and retry three times if it fails
+                while retry < 3:
+                    try:
+                        proc = subprocess.Popen(commandargs)
+                        proc.wait()
+                    except subprocess.CalledProcessError as err:
+                        proerror = err
+                        retry += 1 # increment retry
+            
+            # Exit with error upon ORF failing three times
+            if proerror:
+                print("============================= Error in ORFFinder ===========================================")
+                raise proerror
+
+            # Use index file instead of creating dictionary
             self.orfs = SeqIO.index(outfile, "fasta")
-        
+        else:
+            # Create ORF file if input is amino acid sequences
+            self.orfs = SeqIO.index(self.mergedtranscripts_file, "fasta")
+            
     def get_longest_orfs(self, **kwargs) -> None:
         """Get longest open reading frame (ORF) for each Id in merged ORF file
         """
+
         if os.path.isfile(self.longestmergedORFs_file):
             records = SeqIO.index(self.longestmergedORFs_file, 'fasta')
 
@@ -103,12 +123,13 @@ class Analysis():
                 self.longestorfs[seqid] = sequence
         else:
             # Read assembly file
+            # print(self.orfs)
             for idx in self.orfs:
                 sqid = str(idx)
                 sequence = str(self.orfs[idx].seq)
                 # Split to get ID of sequence
                 seqidinfo = re.split("ORF\d+_", sqid)
-                info = re.split(":", seqidinfo[1])
+                info = re.split(":", seqidinfo[1]) if len(seqidinfo) > 1 else seqidinfo
                 seqid = info[0] # Sequence Id after splits
                 # Save to longest ORFs dictionary
                 if seqid not in self.longestorfs:
