@@ -14,7 +14,7 @@ Linux
 Example Usages:
 
 Help:
-python consemblex.pl --help
+python consemblex.py --help
 
 <!-- Single-end read assembly
 perl --assemblyName testData --single testData_1.fastq
