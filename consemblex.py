@@ -18,7 +18,7 @@ biopython_package = "Bio"
 
 # Global variables
 basedir = os.getcwd()
-logFile = "consemble.log"
+logFile = "consemblex.log"
 output = os.path.join(basedir, 'output/')
 utillib.create_directory(directorypath=output)
 
@@ -164,27 +164,27 @@ def run_analysis(args):
         utillib.create_directory(directorypath=dest)
 
         # Longest sequences
-        consemble_longest = os.path.join(analysis.output, "{}/consemble{}+_longest.fasta".format(i, i))
+        consemble_longest = os.path.join(analysis.output, "{}/consemblex{}+_longest.fasta".format(i, i))
         utillib.write_id_and_sequence(data=nucleotidelongest, file=consemble_longest, final=True, overlap=i, plusonly=False,
                                         overlapmax=overlaps)
 
         # Shortest sequences
-        consemble_shortest = os.path.join(analysis.output, "{}/consemble{}+_shortest.fasta".format(i, i))
+        consemble_shortest = os.path.join(analysis.output, "{}/consemblex{}+_shortest.fasta".format(i, i))
         utillib.write_id_and_sequence(data=nucleotideshortest, file=consemble_shortest, final=True, overlap=i, plusonly=False,
                                         overlapmax=overlaps)
 
         # Amino sequences 
-        consemble_fa = os.path.join(analysis.output, "{}/consemble{}+.faa".format(i, i))
+        consemble_fa = os.path.join(analysis.output, "{}/consemblex{}+.faa".format(i, i))
         utillib.write_id_and_sequence(data=aminocontigs, file=consemble_fa, final=True, overlap=i, plusonly=False, 
                                         overlapmax=overlaps)
 
         # Benchmark results
         if args.benchmark:
-            consemble_fa_hits = os.path.join(analysis.output, "{}/consemble{}+_hits.txt".format(i, i))
+            consemble_fa_hits = os.path.join(analysis.output, "{}/consemblex{}+_hits.txt".format(i, i))
             utillib.write_benchmark_ref(data=asemblyhits, file=consemble_fa_hits, overlap=i, plusonly=False, overlapmax=overlaps)
 
         # Reference
-        consemble_ref = os.path.join(analysis.output, "{}/consemble{}+_ref.txt".format(i, i))
+        consemble_ref = os.path.join(analysis.output, "{}/consemblex{}+_ref.txt".format(i, i))
         utillib.write_ref(data=contigsref, names=analysis.contigsassemblers, file=consemble_ref, overlap=i, plusonly=False, 
                             overlapmax=overlaps)
     
@@ -205,8 +205,8 @@ def package_installed(packageName):
     return spec
 
 ## Process command line arguments
-parser = argparse.ArgumentParser(description="A consensus-based ensemble approach to improve transcriptome assembly")
-parser.add_argument("-v", "--version", action="version", version="ConSemble pipeline version {}".format(__version__), 
+parser = argparse.ArgumentParser(description="ConSemblEX: A consensus-based ensemble approach to improve transcriptome assembly")
+parser.add_argument("-v", "--version", action="version", version="ConSemblEX pipeline version {}".format(__version__), 
                     help="print pipeline version")
 subparsers = parser.add_subparsers(title="available commands", help="specify whether to run assembly or analysis")
 

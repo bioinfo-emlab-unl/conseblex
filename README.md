@@ -1,191 +1,301 @@
 # ConSemblEX
-An extension of ConSemble, a consensus-based ensemble approach to improve transcriptome assembly
+An extension of ConSemble, a consensus-based ensemble approach to improve transcriptome assembly.
+ConSemblex consists of three modules, Assembly, Read-processing, and Analysis;
 
-(consemblex.py: last updated on July 3, 2022)
-(README: last updated on July 3, 2022)
+- **Assembly**: This module is used to run individual assembly pipelines from given single-end or paired-end read files for specified assembly methods.  
 
-####################################################
-TESTED:
-Linux
-#####################################################
+- **Analysis**: This module is used to perform the final consensus assembly between given assembly files from chosen assemblies methods.
 
+- **Read-processing**: This module compliments the **Assembly** module. It provides means to filter and normalize reads before assembly.   
 
-####################################################
-Example Usages:
+More details about each module and examples runs are provided in the later sections of the document.
+
+**README update**: last updated on September 18, 2022.
+
+**Tested on**: Linux
+
+### Assembly
+### Dependancies
+Ensure that all the individual assembly methods are available on your environment before running the Assembly pipeline.
+1. [Python3 ^v3.9.x](https://www.python.org/downloads/)
+2. [Biopython v1.78](https://biopython.org/)
+3. [khmer v2.0](https://github.com/dib-lab/khmer)
+4. [erne-filter v2.1](http://erne.sourceforge.net/index.php)
+
+Only the exact versions of the above libraries have been tested. However, later versions are expected to work.
+
+### Usage
+
+#### *De novo* assembly input and options
+```bash
+usage: consemblex.py denovo [-h] [-a ASSEMBLYNAME] [-o OUTPUT] [-n | -c NORMCOV] [-f] [-m ASSEMBLERS] [-t] [-q Q_VALUE] [-s SINGLE | -p reads1 reads2]
+
+optional arguments:
+  -h, --help            show this help message and exit
+
+output:
+  -a ASSEMBLYNAME, --assemblyName ASSEMBLYNAME
+                        specifies the assembly name (e.g testAssembly) to organize output files
+  -o OUTPUT, --output OUTPUT
+                        changes the base directory for output files (default is current working directory)
+
+normalization:
+  -n, --noNorm          skip digital normalization of filtered reads
+  -c NORMCOV, --normCov NORMCOV
+                        change the max kmer coverage for digital normalization - lowering coverage speeds up assembly time, but increases risk of artifacts (default 50)
+
+configurations:
+  -f, --force           ignores the log file and runs entire pipeline
+  -m ASSEMBLERS, --assemblers ASSEMBLERS
+                        file containing assemblers and their respective configurations
+  -t, --time            records the amount of time each stage of the pipeline takes
+
+quality filter:
+  -q Q_VALUE, --q_value Q_VALUE
+                        changes q-value threshold for reads filtering by erne-filter (default 20)
+
+reads:
+  -s SINGLE, --single SINGLE
+                        specifies the file including single-end reads
+  -p reads1 reads2, --paired reads1 reads2
+                        specifies the paired-end reads files
+```
 
 Help:
-python consemblex.py --help
+```bash
+python consemblex.py d -h
+```
 
-<!-- Single-end read assembly
-perl --assemblyName testData --single testData_1.fastq
+OR
 
-Paired-end read assembly (Produces the output shown below)
-perl --assemblyName testData --reads1 testData_1.fastq --reads2 testData_2.fastq
-####################################################
+```bash
+python consemblex.py denovo --help
+```
 
+*De novo* assembly:
+```bash
+python consemblex.py d -a col0 -o output -p data/col0/merged_norm_1.fq data/col0/merged_norm_2.fq
+```
+#### Guided assembly input and options
+```bash
+usage: consemblex.py guided [-h] [-a ASSEMBLYNAME] [-o OUTPUT] [-n | -c NORMCOV] [-f FORCE] [-m ASSEMBLERS] [-t] [-q Q_VALUE] [-r REFERENCE] [-s SINGLE | -p reads1 reads2]
 
-####################################################
-PREPARATION: (DO THIS BEFORE YOU RUN THE PIPELINE)
+optional arguments:
+  -h, --help            show this help message and exit
 
-For the assembly pipeline to run, the following programs MUST be in the PATH:
+output:
+  -a ASSEMBLYNAME, --assemblyName ASSEMBLYNAME
+                        specifies the assembly name (e.g testAssembly) to organize output files
+  -o OUTPUT, --output OUTPUT
+                        changes the base directory for output files (default is current working directory)
 
-	erne-filter v2.0 (http://erne.sourceforge.net/index.php)
-	khmer v2.0 (https://github.com/dib-lab/khmer)
-	IDBA-Tran v1.1.1 (http://i.cs.hku.hk/~alse/hkubrg/projects/idba_tran/)
-	SOAPdenovo-Trans v1.0.3 (http://soap.genomics.org.cn/SOAPdenovo-Trans.html)
-	rnaSPAdes v3.10.0 (http://bioinf.spbau.ru/en/rnaspades)
-	Trinity v2.4.0 (https://github.com/trinityrnaseq/trinityrnaseq/wiki)
-	ORFfinder (https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/)
+normalization:
+  -n, --noNorm          skip digital normalization of filtered reads
+  -c NORMCOV, --normCov NORMCOV
+                        change the max kmer coverage for digital normalization - lowering coverage speeds up assembly time, but increases risk of artifacts (default 50)
 
-Later versions of these programs should work, but have not been tested.
+configurations:
+  -f FORCE, --force FORCE
+                        ignores the log file and runs entire pipeline
+  -m ASSEMBLERS, --assemblers ASSEMBLERS
+                        file containing assemblers and their respective configurations
+  -t, --time            records the amount of time each stage of the pipeline takes
 
-Create a directory and copy the input read sequence file(s) in FASTQ format in this directory.  All of the reads for the assembly should be combined into 1 single-end read file, or 2 paired-end read files.
+quality filter:
+  -q Q_VALUE, --q_value Q_VALUE
+                        changes q-value threshold for reads filtering by erne-filter (default 20)
 
-ALL output files will be saved in the current working directory the pipeline is called from unless a directory is specified with --outputDir option. This directory and all of the subdirectories will be automatically created by the pipeline.
+transcriptome reference:
+  -r REFERENCE, --reference REFERENCE
+                        location for the reference Fasta file for read mapping
 
-In the above "Paired-end read assembly" example, the following directories are generated:
-	./FilteredReads/testData/q20/	Location of quality filtered reads before normalization
-	./NormalizedReads/testData/	Location of normalized reads used for assemblies
-	./AssembledReads/testData/	Location of all output files produced for the assemblies and final ConSemble results
-If the directories cannot be created, the execution of the pipeline will fail.
-####################################################
+reads:
+  -s SINGLE, --single SINGLE
+                        specifies the file including single-end reads
+  -p reads1 reads2, --paired reads1 reads2
+                        specifies the paired-end reads files
+```
 
+Help:
+```bash
+python consemblex.py g -h
+```
 
-####################################################
-INPUTS and OPTIONS:
-	--single	Specifies the file including single-end reads
-	--reads1	Specifies the first file for paired-end reads
-	--reads2	Specifies second file for paired-end reads
-	--assemblyName	Specifies the assembly name (e.g. testData) to organize output files
-	--q		Changes q-value threshold for reads filtering by erne-filter (default 20)
-	--maxMemory	Maximum memory for pipeline in GB (default 64)
-	--maxThreads	Maxmimum number of threads (default 8)
-	--outputDir	Changes the base directory for output files (default is current working directory)
-	--force		Ignores the log file and runs entire pipeline.  See the description of log.txt below.
-	--noNorm	Skips the digital normalization of filtered reads
-	--normCov	Changes the max kmer coverage for digital normalization. Lowering coverage speeds up assembly time, but increases risk of artifacts (default 50)
-	--time		Records the amount of time each stage of the pipeline takes
-	--version	Prints pipeline version without executing the pipeline
-	--h or --help	Prints these options without executing the pipeline
-	
+OR
 
-####################################################
-OUTPUT FILES: all the files mentioned below will be written to the output directory chosen by the "--outputDir" option and the subdirectory "testData" is chosen by the "--assemblyName" option (see the example above).
+```bash
+python consemblex.py guided --help
+```
 
-SUBDIRECTORY - "FilteredReads/testData/q20"
-1. merged_1.fastq
---------------------------
-Reads that pass the quality filtering from the first read file.  Output by erne-filter.
+Guided assembly:
+```bash
+python consemblex.py d -a col0 -o output -r Col0ref.faa -p data/col0/merged_norm_1.fq data/col0/merged_norm_2.fq
+```
 
-2. merged_2.fastq
---------------------------
-Reads that pass the quality filtering from the second read file.  Output by erne-filter.
+### Output files
+/*TODO*/
 
-3. mergedI.fastq
---------------------------
-Interleaved reads from the filtered merged_1.fastq and merged_2.fastq, input file for read normalization.  Output by interleave-reads.py from khmer.
+## Analysis
+### Dependancies
+Ensure that the following libraries/programs exist on your environment before running the Analysis pipeline.
+1. [Python3 ^v3.9.x](https://www.python.org/downloads/)
+2. [Biopython v1.78](https://biopython.org/)
+3. [ORFfinder linux-i64](https://ftp.ncbi.nlm.nih.gov/genomes/TOOLS/ORFfinder/linux-i64/)
 
-4. merged_unpaired.fastq
---------------------------
-Reads orphaned by quality filtering.  Output by interleave-reads.py from khmer.
+Only the exact versions of the above libraries have been tested. However, later versions are expected to work.
 
+### Usage
+#### Input and options
+```bash
+usage: consemblex.py analyze [-h] [-a ASSEMBLIES [ASSEMBLIES ...]] [-n NAME] [-w] [-b BENCHMARK] [-p]
 
-SUBDIRECTORY - "NormalizedReads/testData"
-1. merged.fa.1
---------------------------
-Fasta version of normalized reads from the first read file.  Output by split-paired-reads.py from khmer.
+optional arguments:
+  -h, --help            show this help message and exit
+  -a ASSEMBLIES [ASSEMBLIES ...], --assemblies ASSEMBLIES [ASSEMBLIES ...]
+                        specifies a list of the assemblies and their respective files i.e SPades spades.fa Trinity trinity.fa ...
+  -n NAME, --name NAME  specifies the analysis name (e.g testAnalysis) to organize output files
+  -w, --write           write intermediate output to files
+  -b BENCHMARK, --benchmark BENCHMARK
+                        bechmark transcriptome
+  -p, --aminoacids      specifies whether the files are amino acid sequences files (default is nucleotide sequences fies)
+```
 
-2. merged.fa.2
---------------------------
-Fasta version of normalized reads from the second read file.  Output by split-paired-reads.py from khmer.
+Example usage:
 
-3. merged.fq.1
---------------------------
-Normalized reads from the first read file.  Output by split-paired-reads.py from khmer.
+Help:
+```bash
+python consemblex.py x -h
+```
 
-4. merged.fq.2
---------------------------
-Normalized reads from the second read file. Output by split-paired-reads.py from khmer.
+OR
 
-5. mergedI.fq
---------------------------
-Interleaved normalized reads. Output by normalize-by-median.py from khmer.
+```bash
+python consemblex.py analyze --help
+```
 
-6. mergedI.fa
---------------------------
-Interleaved reads in fasta format. Output by fastq-to-fasta.py from khmer.
+Analysis:
+```bash
+python consemblex.py analyze -n col0 -wp -b Col0ref.faa -a soap SOAP.fasta spades rnaSPAdes.fasta idba idba.fasta Trinity.fasta
+```
 
-7. mergedI.fq.se
---------------------------
-Reads orphaned by the read normalization.  Output by extract-paired-reads.py from khmer.
+### Output files
+ConSemblEX creates the *output* folder in the current working directory. All the output files from the analysis are saved to the *analysis* folder within the *output* folder. Inside the *analysis* folder, a folder with the name provided at execution time is created in which all the final files are saved. Following the run example provided above, the output files would appear as shown below;
+```bash
+col0
+├── 1
+│   ├── consemblex1+.faa
+│   ├── consemblex1+_hits.txt
+│   ├── consemblex1+_longest.fasta
+│   ├── consemblex1+_ref.txt
+│   ├── consemblex1+_shortest.fasta
+│   ├── consemblex1.faa
+│   ├── consemblex1.fasta
+│   ├── consemblex1_hits.txt
+│   └── consemblex1_ref.txt
+├── 2
+│   ├── consemblex2+.faa
+│   ├── consemblex2+_hits.txt
+│   ├── consemblex2+_longest.fasta
+│   ├── consemblex2+_ref.txt
+│   ├── consemblex2+_shortest.fasta
+│   ├── consemblex2.faa
+│   ├── consemblex2.fasta
+│   ├── consemblex2_hits.txt
+│   └── consemblex2_ref.txt
+├── 3
+│   ├── consemblex3+.faa
+│   ├── consemblex3+_hits.txt
+│   ├── consemblex3+_longest.fasta
+│   ├── consemblex3+_ref.txt
+│   ├── consemblex3+_shortest.fasta
+│   ├── consemblex3.faa
+│   ├── consemblex3.fasta
+│   ├── consemblex3_hits.txt
+│   └── consemblex3_ref.txt
+├── 4
+│   ├── consemblex4+.faa
+│   ├── consemblex4+_hits.txt
+│   ├── consemblex4+_longest.fasta
+│   ├── consemblex4+_ref.txt
+│   ├── consemblex4+_shortest.fasta
+│   ├── consemblex4.faa
+│   ├── consemblex4.fasta
+│   ├── consemblex4_hits.txt
+│   └── consemblex4_ref.txt
+├── 5
+│   ├── consemblex5.faa
+│   ├── consemblex5.fasta
+│   ├── consemblex5_hits.txt
+│   └── consemblex5_ref.txt
+├── longestMergedORFs.faa
+├── mergedORFs.faa
+├── mergedTranscripts.faa
+└── statistics.csv
 
-SUBDIRECTORY - "AssembledReads/testData"
-1. consensus.aa
---------------------------
-Protein sequences produced by the ConSemble pipeline (protein sequences produced by at least 3 of the 4 assemblers)
+```
 
-2. consensus.fasta
---------------------------
-Nucleotide sequences produced by ConSemble pipeline.  If multiple contigs produce a protein sequence in consensus.aa, the shortest contig is chosen.
+- *1* contains all files for the one-way or greater consensus, *2* contains all files for the two-way or greater consensus and so on...
+- *longestMergedORFs.fa*: longest ORFs among each set of ORFs for a specific nucleotide sequence.
+- *mergedTranscripts.faa*: all nucleotide transcripts from the provided assembly methods.
+- *mergedORFs.faa*: all ORFs resulting from running ORFfinder on *mergedTranscripts.faa*.
+- In each numbered folder, the contained files are;
+  - *consemblex{num}.faa*: consensus amino-acids represented by *contig-Ids* and actual sequences.
+  - *consemblex{num}_hits.txt*: table of assembled contigs and their conrresponding benchmark transcript Ids. *Not hit* indicates that no matching benchmark transcript was found.
+  - *consemblex{num}_longest.fasta*: representative longest nucleotides sequences among the assembled contigs.
+  - *consemblex{num}_ref.txt*: table reference of assembled contigs, their corresponding assembly methods and the original nucleotide sequence Ids.  
+  - *consemblex{num}_shortest.fasta*: representative lonshortestgest nucleotides sequences among the assembled contigs. 
 
-3. idba.fasta
---------------------------
-Merged nucleotide sequences from all IDBA-Tran assemblies
+### Read Processing
+### Dependancies
+Ensure that all the individual assembly methods are available on your environment before running the Read processing pipeline.
+1. [Python3 ^v3.9.x](https://www.python.org/downloads/)
+2. [Biopython v1.78](https://biopython.org/)
+3. [khmer v2.0](https://github.com/dib-lab/khmer)
+4. [erne-filter v2.1](http://erne.sourceforge.net/index.php)
 
-4. SOAPdenovo.fasta
---------------------------
-Merged nucleotide sequences from all SOAPdenovo-trans assemblies
+Only the exact versions of the above libraries have been tested. However, later versions are expected to work.
 
-5. SPAdes.fasta
---------------------------
-Merged nucleotide sequences from all rnaSPAdes assemblies
+### Usage
+#### Input and options
+```bash
+usage: consemblex.py process_reads [-h] [-s SINGLE | -p reads1 reads2] [-o OUTPUT] [-n NAME] [-q Q_VALUE] [-c NORMCOV]
 
-6. Trinity.fasta
---------------------------
-Merged nucleotide sequences from all Trinity assemblies
+optional arguments:
+  -h, --help            show this help message and exit
 
-7. mergedTranscripts.fa
---------------------------
-Merged nucleotide sequences from all assemblies.  The sequence names are changed to identify which assembly produced the sequence.
+reads:
+  -s SINGLE, --single SINGLE
+                        specifies the file containing single-end reads
+  -p reads1 reads2, --paired reads1 reads2
+                        specifies the paired-end reads files
 
-8. mergedTranscripts.fa.faa
---------------------------
-Merged protein sequences produced by ORFfinder from all assemblies.  The sequence names are changed to identify which assembly produced the sequence.  Used as the input for ConSemble.
+output:
+  -o OUTPUT, --output OUTPUT
+                        changes the base directory for output files (default is current working directory)
+  -n NAME, --name NAME  specifies the process reads name (e.g col0) to organize output files
 
-9. idba/
---------------------------
-Contains all of the files produced by the IDBA-Tran assemblies
+configurations:
+  -q Q_VALUE, --q_value Q_VALUE
+                        changes q-value threshold for reads filtering by erne-filter (default 20)
+  -c NORMCOV, --normCov NORMCOV
+                        change the max kmer coverage for digital normalization; lowering coverage speeds up assembly time, but increases risk of artifacts (default 50)
+```
 
-10. SOAP/
---------------------------
-Contains all of the files produced by the SOAPdenovo-Trans assemblies
+Help:
+```bash
+python consemblex.py p -h
+```
 
-11. SPAdes/
---------------------------
-Contains all of the files produced by the rnaSPAdes assemblies
+OR
 
-12. Trinity/
---------------------------
-Contains all of the files produced by the Trinity assemblies
+```bash
+python consemblex.py process_reads --help
+```
 
-13. log.txt
---------------------------
-Log of previously completed steps for assembly.  If the assembly is interrupted, any steps listed in this file will be skipped when the assembly is restarted.  If the --force flag is used, the log file is ignored and the entire pipeline is run.
+Process reads:
+```bash
+python consemblex.py pr -n col0 -o process_reads -p data/col0-Alt-reads_1.fq data/col0-Alt-reads_2.fq
+```
 
-14. mergingTmp.fa and mergingTmp.fa.faa
---------------------------
-Temporary files for ORFfinder to translate individual assemblies
-
-Depending on the environment the pipeline is run in, additional files may be generated.
-
-####################################################
-[NOTES]
-1.  Sequences produced by only 1 or 2 assemblers are not kept in consensus.aa or consensus.fasta, but can still be found in the merged transcripts files.
-2.  Merged assemblies in the AssembledReads subdirectory are not unique at the nucleotide or amino acid level, and may contain a large number of duplicates.
-3.  All khmer lengths used in the assemblies are hard-coded as followed:
-	IDBA-Tran: 20-60 every 10
-	SOAPdenovo-Trans: 15-127 every 4 until the max read length (automatically determined by the script)
-	rnaSPAdes: 19-71 every 4 until the max read length (automatically determined by the script)
-	Trinity: 15-31 every 4.
-
-#################################################### -->
+### Output files
+/*TODO*/
