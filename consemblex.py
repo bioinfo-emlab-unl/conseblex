@@ -1,4 +1,4 @@
-__version__ = 2.0
+__version__ = 1.0
 
 import argparse
 import os, re, time
@@ -163,15 +163,17 @@ def run_analysis(args):
         dest = os.path.join(analysis.output, "{}".format(i))
         utillib.create_directory(directorypath=dest)
 
-        # Longest sequences
-        consemble_longest = os.path.join(analysis.output, "{}/consemblex{}+_longest.fasta".format(i, i))
-        utillib.write_id_and_sequence(data=nucleotidelongest, file=consemble_longest, final=True, overlap=i, plusonly=False,
-                                        overlapmax=overlaps)
+        # If aminoacids, do not write shortest or longest representative sequences 
+        if not args.aminoacids:
+            # Longest sequences
+            consemble_longest = os.path.join(analysis.output, "{}/consemblex{}+_longest.fasta".format(i, i))
+            utillib.write_id_and_sequence(data=nucleotidelongest, file=consemble_longest, final=True, overlap=i, plusonly=False,
+                                            overlapmax=overlaps)
 
-        # Shortest sequences
-        consemble_shortest = os.path.join(analysis.output, "{}/consemblex{}+_shortest.fasta".format(i, i))
-        utillib.write_id_and_sequence(data=nucleotideshortest, file=consemble_shortest, final=True, overlap=i, plusonly=False,
-                                        overlapmax=overlaps)
+            # Shortest sequences
+            consemble_shortest = os.path.join(analysis.output, "{}/consemblex{}+_shortest.fasta".format(i, i))
+            utillib.write_id_and_sequence(data=nucleotideshortest, file=consemble_shortest, final=True, overlap=i, plusonly=False,
+                                            overlapmax=overlaps)
 
         # Amino sequences 
         consemble_fa = os.path.join(analysis.output, "{}/consemblex{}+.faa".format(i, i))
