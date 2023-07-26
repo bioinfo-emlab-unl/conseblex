@@ -1,0 +1,18 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Mwaba"
+  given-names: "Richard"
+title: "ConSemblEX: A Consensus-Based Transcriptome Assembly Approach that Extends ConSemble and Improves Transcriptome Assembly"
+version: 1.0.0
+doi: 
+date-released: 2022-07-04
+url: "https://digitalcommons.unl.edu/computerscidiss/222/"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Mwaba"
+    given-names: "Richard"
+  doi: 
+  title: "ConSemblEX: A Consensus-Based Transcriptome Assembly Approach that Extends ConSemble and Improves Transcriptome Assembly"
+  year: 2022
